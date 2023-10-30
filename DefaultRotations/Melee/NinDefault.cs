@@ -1,7 +1,7 @@
 namespace GlaiveRotations.Melee;
 
 [RotationDesc(ActionID.Mug)]
-[SourceCode(Path = "main/GlaiveRotations/Melee/NinDefault.cs")]
+[SourceCode(Path = "main/DefaultRotations/Melee/NinDefault.cs")]
 [LinkDescription("https://www.thebalanceffxiv.com/img/jobs/nin/earlymug3.png")]
 [LinkDescription("https://www.thebalanceffxiv.com/img/jobs/nin/nininfographicwindows.png")]
 [LinkDescription("https://docs.google.com/spreadsheets/u/0/d/1BZZrqWMRrugCeiBICEgjCz2vRNXt_lRTxPnSQr24Em0/htmlview#",
@@ -11,16 +11,17 @@ public sealed class NinDefault : NIN_Base
 {
     private const int HutonPrePullTimer = 10;
     private const int SuitonPrePullTimer = 6;
-    public override string GameVersion => "6.35";
+    public override string GameVersion => "6.40";
 
-    public override string RotationName => "Standard";
+    public override string RotationName => "Standard Rotation";
 
     private static INinAction _ninActionAim;
     private static bool _firstTrickAttack = true;
     private static bool _firstDawd = true;
 
-    private static bool InTrickAttack => TrickAttack.IsCoolingDown && !TrickAttack.ElapsedAfter(15) && TrickAttack.ElapsedAfter(0.1f);
-    private static bool InMug => Mug.IsCoolingDown && !Mug.ElapsedAfter(20) && Mug.ElapsedAfter(0.1f);
+    private static bool InTrickAttack => TrickAttack.IsCoolingDown && !TrickAttack.ElapsedAfter(17);
+    private static bool InMug => Mug.IsCoolingDown && !Mug.ElapsedAfter(19);
+
     private static bool NoNinjutsu => AdjustId(ActionID.Ninjutsu) is ActionID.Ninjutsu or ActionID.RabbitMedium;
 
     protected override IRotationConfigSet CreateConfiguration()
@@ -61,14 +62,12 @@ public sealed class NinDefault : NIN_Base
             case < HutonPrePullTimer when _ninActionAim == null && Ten.IsCoolingDown && Hide.CanUse(out act):
                 return act;
             case < HutonPrePullTimer:
-                {
-                    if (!realInHuton)
-                    {
-                        SetNinjutsu(Huton);
-                    }
 
-                    break;
+                if (!realInHuton)
+                {
+                    SetNinjutsu(Huton);
                 }
+                break;
         }
 
         return base.CountDownAction(remainTime);
@@ -87,7 +86,7 @@ public sealed class NinDefault : NIN_Base
             return;
         }
 
-        if (_ninActionAim != null && _ninActionAim != act)
+        if (_ninActionAim != act)
         {
             _ninActionAim = act;
         }
@@ -95,7 +94,10 @@ public sealed class NinDefault : NIN_Base
 
     private static void ClearNinjutsu()
     {
-        _ninActionAim = null;
+        if (_ninActionAim != null)
+        {
+            _ninActionAim = null;
+        }
     }
 
     private static bool ChoiceNinjutsu(out IAction act)
@@ -154,7 +156,8 @@ public sealed class NinDefault : NIN_Base
                 return false;
             }
             if (Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
-               && (!InCombat || !Huraijin.EnoughLevel) && Huton.CanUse(out _)
+               && (!InCombat || !Huraijin.EnoughLevel)
+               && Huton.CanUse(out _)
                && !IsLastAction(false, Huton))
             {
                 SetNinjutsu(Huton);
@@ -185,10 +188,10 @@ public sealed class NinDefault : NIN_Base
                 return false;
             }
 
-            if (Ten.CanUse(out _/*, InTrickAttack
-                 && !Player.HasStatus(false, StatusID.RaijuReady)
+            if (Ten.CanUse(out _, InTrickAttack
+                 && !Player.HasStatus(true, StatusID.RaijuReady)
                     ? CanUseOption.EmptyOrSkipCombo
-                    : CanUseOption.None*/))
+                    : CanUseOption.None))
             {
                 if (Raiton.CanUse(out _))
                 {
@@ -276,8 +279,8 @@ public sealed class NinDefault : NIN_Base
             }
         }
 
-        if (!Player.WillStatusEnd(3, false, StatusID.Kassatsu)
-            && Player.HasStatus(false, StatusID.Kassatsu)
+        if (!Player.WillStatusEnd(12, true, StatusID.Kassatsu)
+            && Player.HasStatus(true, StatusID.Kassatsu)
             && !InTrickAttack)
         {
             return false;
@@ -351,6 +354,7 @@ public sealed class NinDefault : NIN_Base
         var hasTenChiJinReady = Player.HasStatus(true, StatusID.TenChiJin);
 
         if ((InTrickAttack || InMug)
+            && NoNinjutsu
             && !hasRaijuReady
             && PhantomKamaitachi.CanUse(out act))
         {
@@ -395,6 +399,11 @@ public sealed class NinDefault : NIN_Base
             }
 
             if (ArmorCrush.CanUse(out act) && !InTrickAttack)
+            {
+                return true;
+            }
+
+            if (PhantomKamaitachi.CanUse(out act) && InTrickAttack && HutonTime <= 50f)
             {
                 return true;
             }
@@ -496,7 +505,7 @@ public sealed class NinDefault : NIN_Base
         }
 
         if (TrickAttack.IsCoolingDown
-            && !TrickAttack.WillHaveOneCharge(19)
+            && !TrickAttack.WillHaveOneCharge(18)
             && Meisui.CanUse(out act))
         {
             return true;
