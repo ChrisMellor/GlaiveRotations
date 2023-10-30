@@ -343,8 +343,7 @@ public sealed class NIN_Default : NIN_Base
 
     protected override bool GeneralGCD(out IAction act)
     {
-        var hasRaijuReady = Player.HasStatus(true, StatusID.RaijuReady)
-            && !Player.HasStatus(true, StatusID.TenChiJin);
+        var hasRaijuReady = Player.HasStatus(true, StatusID.RaijuReady);
 
         if ((InTrickAttack || InMug) && NoNinjutsu && !hasRaijuReady
             && PhantomKamaitachi.CanUse(out act))
@@ -365,7 +364,7 @@ public sealed class NIN_Default : NIN_Base
         //No Ninjutsu
         if (NoNinjutsu)
         {
-            if (!CombatElapsedLess(10) && FleetingRaiju.CanUse(out act))
+            if (!CombatElapsedLess(10) && FleetingRaiju.CanUse(out act) && !Player.HasStatus(true, StatusID.TenChiJin))
             {
                 return true;
             }
