@@ -1,4 +1,4 @@
-namespace DefaultRotations.Tank;
+namespace GlaiveRotations.Tank;
 
 [SourceCode(Path = "main/DefaultRotations/Tank/WAR_Default.cs")]
 [LinkDescription("https://cdn.discordapp.com/attachments/277962807813865472/963548326433796116/unknown.png")]

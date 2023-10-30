@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Tank;
+﻿namespace GlaiveRotations.Tank;
 
 [LinkDescription("https://xiv.sleepyshiba.com/pld/img/63-60stentative2.png")]
 [RotationDesc("The whole rotation's burst\nis base on:")]

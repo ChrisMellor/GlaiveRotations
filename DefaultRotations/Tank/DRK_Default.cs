@@ -1,4 +1,4 @@
-namespace DefaultRotations.Tank;
+namespace GlaiveRotations.Tank;
 
 
 [RotationDesc(ActionID.BloodWeapon, ActionID.Delirium)]

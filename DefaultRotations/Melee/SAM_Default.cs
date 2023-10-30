@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Melee;
+﻿namespace GlaiveRotations.Melee;
 
 [SourceCode(Path = "main/DefaultRotations/Melee/SAM_Default.cs")]
 public sealed class SAM_Default : SAM_Base

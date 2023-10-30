@@ -1,4 +1,4 @@
-namespace DefaultRotations.Magical;
+namespace GlaiveRotations.Magical;
 
 [RotationDesc(ActionID.Embolden)]
 [SourceCode(Path = "main/DefaultRotations/Magical/RDM_Default.cs")]

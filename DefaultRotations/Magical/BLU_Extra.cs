@@ -1,4 +1,4 @@
-﻿namespace ExtraRotations.Magical;
+﻿namespace GlaiveRotations.Magical;
 
 [SourceCode(Path = "main/DefaultRotations/Magical/BLU_Extra.cs")]
 public sealed class BLU_Extra : BLU_Base

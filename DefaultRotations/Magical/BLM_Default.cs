@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Magical;
+﻿namespace GlaiveRotations.Magical;
 
 [SourceCode(Path = "main/DefaultRotations/Magical/BLM_Default.cs")]
 public class BLM_Default : BLM_Base

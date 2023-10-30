@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Magical;
+﻿namespace GlaiveRotations.Magical;
 
 [SourceCode(Path = "main/DefaultRotations/Magical/BLU_Default.cs")]
 public sealed class BLU_Default : BLU_Base

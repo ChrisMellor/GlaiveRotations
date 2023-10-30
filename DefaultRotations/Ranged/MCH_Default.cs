@@ -1,4 +1,4 @@
-namespace DefaultRotations.Ranged;
+namespace GlaiveRotations.Ranged;
 
 [BetaRotation]
 [SourceCode(Path = "main/DefaultRotations/Ranged/MCH_Default.cs")]

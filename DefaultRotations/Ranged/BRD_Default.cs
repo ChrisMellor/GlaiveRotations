@@ -1,4 +1,4 @@
-namespace DefaultRotations.Ranged;
+namespace GlaiveRotations.Ranged;
 
 [SourceCode(Path = "main/DefaultRotations/Ranged/BRD_Default.cs")]
 public sealed class BRD_Default : BRD_Base
@@ -292,7 +292,7 @@ public sealed class BRD_Default : BRD_Base
         }
 
         //看看现在有没有开猛者强击和战斗之声
-        bool empty = Player.HasStatus(true, StatusID.RagingStrikes) && (Player.HasStatus(true, StatusID.BattleVoice) || !BattleVoice.EnoughLevel) || Song == Song.MAGE;
+        var empty = Player.HasStatus(true, StatusID.RagingStrikes) && (Player.HasStatus(true, StatusID.BattleVoice) || !BattleVoice.EnoughLevel) || Song == Song.MAGE;
 
         if (EmpyrealArrow.IsCoolingDown || !EmpyrealArrow.WillHaveOneChargeGCD() || Repertoire != 3 || !EmpyrealArrow.EnoughLevel)
         {

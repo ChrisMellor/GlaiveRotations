@@ -1,4 +1,4 @@
-namespace DefaultRotations.Healer;
+namespace GlaiveRotations.Healer;
 
 [RotationDesc(ActionID.Divination)]
 [SourceCode(Path = "main/DefaultRotations/Healer/AST_Default.cs")]

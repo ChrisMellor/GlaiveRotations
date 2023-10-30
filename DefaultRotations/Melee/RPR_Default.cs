@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Melee;
+﻿namespace GlaiveRotations.Melee;
 
 [BetaRotation]
 [RotationDesc(ActionID.ArcaneCircle)]

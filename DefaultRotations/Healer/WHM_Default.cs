@@ -1,4 +1,4 @@
-namespace DefaultRotations.Healer;
+namespace GlaiveRotations.Healer;
 
 [SourceCode(Path = "main/DefaultRotations/Healer/WHM_Default.cs")]
 public sealed class WHM_Default : WHM_Base
@@ -30,8 +30,8 @@ public sealed class WHM_Default : WHM_Base
             return true;
         }
 
-        bool liliesNearlyFull = Lily == 2 && LilyAfter(17);
-        bool liliesFullNoBlood = Lily == 3 && BloodLily < 3;
+        var liliesNearlyFull = Lily == 2 && LilyAfter(17);
+        var liliesFullNoBlood = Lily == 3 && BloodLily < 3;
         if (Configs.GetBool("UseLilyWhenFull") && (liliesNearlyFull || liliesFullNoBlood) && AfflatusMisery.EnoughLevel)
         {
             if (PartyMembersAverHP < 0.7)
@@ -166,7 +166,7 @@ public sealed class WHM_Default : WHM_Base
             return true;
         }
 
-        int hasMedica2 = PartyMembers.Count((n) => n.HasStatus(true, StatusID.Medica2));
+        var hasMedica2 = PartyMembers.Count((n) => n.HasStatus(true, StatusID.Medica2));
 
         if (Medica2.CanUse(out act) && hasMedica2 < PartyMembers.Count() / 2 && !IsLastAction(true, Medica2))
         {

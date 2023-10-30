@@ -1,4 +1,4 @@
-namespace DefaultRotations.Melee;
+namespace GlaiveRotations.Melee;
 
 [RotationDesc(ActionID.RiddleOfFire)]
 [SourceCode(Path = "main/DefaultRotations/Melee/MNK_Default.cs")]

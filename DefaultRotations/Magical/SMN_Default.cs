@@ -1,4 +1,4 @@
-﻿namespace DefaultRotations.Magical;
+﻿namespace GlaiveRotations.Magical;
 
 [BetaRotation]
 [RotationDesc(ActionID.SearingLight)]

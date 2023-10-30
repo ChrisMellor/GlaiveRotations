@@ -1,4 +1,4 @@
-namespace DefaultRotations.Ranged;
+namespace GlaiveRotations.Ranged;
 
 [SourceCode(Path = "main/DefaultRotations/Ranged/DNC_Default.cs")]
 public sealed class DNC_Default : DNC_Base

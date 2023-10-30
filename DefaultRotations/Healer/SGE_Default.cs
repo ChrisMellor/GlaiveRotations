@@ -1,4 +1,4 @@
-namespace DefaultRotations.Healer;
+namespace GlaiveRotations.Healer;
 
 [SourceCode(Path = "main/DefaultRotations/Healer/SGE_Default.cs")]
 public sealed class SGE_Default : SGE_Base

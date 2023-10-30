@@ -1,4 +1,4 @@
-namespace DefaultRotations.Melee;
+namespace GlaiveRotations.Melee;
 
 [SourceCode(Path = "main/DefaultRotations/Melee/DRG_Default.cs")]
 public sealed class DRG_Default : DRG_Base

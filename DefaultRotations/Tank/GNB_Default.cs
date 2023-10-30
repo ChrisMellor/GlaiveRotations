@@ -1,4 +1,4 @@
-namespace DefaultRotations.Tank;
+namespace GlaiveRotations.Tank;
 
 [SourceCode(Path = "main/DefaultRotations/Tank/GNB_Default.cs")]
 public sealed class GNB_Default : GNB_Base

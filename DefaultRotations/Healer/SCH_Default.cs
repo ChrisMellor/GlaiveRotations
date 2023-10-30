@@ -1,4 +1,4 @@
-namespace DefaultRotations.Healer;
+namespace GlaiveRotations.Healer;
 
 [RotationDesc(ActionID.ChainStratagem)]
 [SourceCode(Path = "main/DefaultRotations/Healer/SCH_Default.cs")]
