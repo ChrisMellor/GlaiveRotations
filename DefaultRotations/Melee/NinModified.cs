@@ -1,40 +1,41 @@
+﻿using Dalamud.Logging;
+
 namespace GlaiveRotations.Melee;
 
 [RotationDesc(ActionID.TrickAttack)]
-[SourceCode(Path = "main/DefaultRotations/Melee/NinDefault.cs")]
-[LinkDescription("https://www.thebalanceffxiv.com/img/jobs/nin/earlymug3.png")]
-[LinkDescription("https://www.thebalanceffxiv.com/img/jobs/nin/nininfographicwindows.png")]
-[LinkDescription("https://docs.google.com/spreadsheets/u/0/d/1BZZrqWMRrugCeiBICEgjCz2vRNXt_lRTxPnSQr24Em0/htmlview#",
-    "Under the “Planner (With sample section)”")]
-[YoutubeLink(ID = "Al9KlhA3Zvw")]
-public sealed class NinDefault : NIN_Base
+public sealed class NinRotation : NIN_Base
 {
-    private const int HutonPrePullTimer = 10;
-    private const int SuitonPrePullTimer = 6;
     public override string GameVersion => "6.51";
-
-    public override string RotationName => "Standard Rotation";
+    public override string RotationName => "Incognito's Nin Modified";
+    public override string Description => "Ninja rotation close to the original one";
 
     private static INinAction _ninActionAim;
-    private static bool _firstTrickAttack = true;
-    private static bool _firstDawd = true;
+
+    public static IBaseAction Ten2 { get; } = new BaseAction(AdjustId(ActionID.Ten), ActionOption.Friendly);
+    public static IBaseAction Chi2 { get; } = new BaseAction(AdjustId(ActionID.Chi), ActionOption.Friendly);
+    public static IBaseAction Jin2 { get; } = new BaseAction(AdjustId(ActionID.Jin), ActionOption.Friendly);
+
 
     private static bool InTrickAttack => TrickAttack.IsCoolingDown && !TrickAttack.ElapsedAfter(17);
     private static bool InMug => Mug.IsCoolingDown && !Mug.ElapsedAfter(19);
-
     private static bool NoNinjutsu => AdjustId(ActionID.Ninjutsu) is ActionID.Ninjutsu or ActionID.RabbitMedium;
+
+    private static bool _firstTrickAttack = true;
+    private static bool IsBurstTime { get; set; } = false;
 
     protected override IRotationConfigSet CreateConfiguration()
     {
         return base.CreateConfiguration()
             .SetBool("UseHide", true, "Use Hide")
-            .SetBool("AutoUnhide", true, "Use Unhide");
+            .SetBool("AutoUnhide", true, "Use Unhide")
+            .SetBool("RealignBuffs", true, "Re-align Mug");
     }
 
     protected override IAction CountDownAction(float remainTime)
     {
-        if (remainTime > HutonPrePullTimer)
+        if (remainTime > 10)
         {
+            _firstTrickAttack = true;
             ClearNinjutsu();
         }
 
@@ -54,26 +55,28 @@ public sealed class NinDefault : NIN_Base
             return act;
         }
 
-        switch (remainTime)
+        else if (remainTime < 6)
         {
-            case < SuitonPrePullTimer:
-                SetNinjutsu(Suiton);
-                break;
-            case < HutonPrePullTimer when _ninActionAim == null && Ten.IsCoolingDown && Hide.CanUse(out act):
+            SetNinjutsu(Suiton);
+        }
+        else if (remainTime < 10)
+        {
+            if (_ninActionAim == null && Ten.IsCoolingDown && Hide.CanUse(out act))
+            {
                 return act;
-            case < HutonPrePullTimer:
+            }
 
-                if (!realInHuton)
-                {
-                    SetNinjutsu(Huton);
-                }
-                break;
+            if (!realInHuton)
+            {
+                SetNinjutsu(Huton);
+            }
         }
 
         return base.CountDownAction(remainTime);
     }
 
     #region Ninjutsu
+
     private static void SetNinjutsu(INinAction act)
     {
         if (act == null || AdjustId(ActionID.Ninjutsu) == ActionID.RabbitMedium)
@@ -81,7 +84,8 @@ public sealed class NinDefault : NIN_Base
             return;
         }
 
-        if (_ninActionAim != null && IsLastAction(false, Ten, Jin, Chi, FumaShurikenTen, FumaShurikenJin))
+        if (_ninActionAim != null && (IsLastAction(false, Ten, Jin, Chi, FumaShurikenTen, FumaShurikenJin) &&
+                                      IsLastAction(true, Ten2, Jin2, Chi2, FumaShurikenTen, FumaShurikenJin)))
         {
             return;
         }
@@ -118,6 +122,7 @@ public sealed class NinDefault : NIN_Base
             return false;
         }
 
+        //Kassatsu
         if (Player.HasStatus(true, StatusID.Kassatsu))
         {
             if (GokaMekkyaku.CanUse(out _))
@@ -125,7 +130,8 @@ public sealed class NinDefault : NIN_Base
                 SetNinjutsu(GokaMekkyaku);
                 return false;
             }
-            if (HyoshoRanryu.CanUse(out _) && IsBurst)
+
+            if (HyoshoRanryu.CanUse(out _))
             {
                 SetNinjutsu(HyoshoRanryu);
                 return false;
@@ -145,6 +151,7 @@ public sealed class NinDefault : NIN_Base
         }
         else
         {
+            //Buff
             if (Huraijin.CanUse(out act))
             {
                 return true;
@@ -155,20 +162,20 @@ public sealed class NinDefault : NIN_Base
                 ClearNinjutsu();
                 return false;
             }
+
             if (Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
-               && (!InCombat || !Huraijin.EnoughLevel)
-               && Huton.CanUse(out _)
-               && !IsLastAction(false, Huton))
+                && (!InCombat || !Huraijin.EnoughLevel)
+                && Huton.CanUse(out _)
+                && !IsLastAction(false, Huton))
             {
                 SetNinjutsu(Huton);
                 return false;
             }
 
+            //Aoe
             if (Katon.CanUse(out _))
             {
-                if (!Player.HasStatus(true, StatusID.Doton)
-                    && !IsMoving
-                    && !TenChiJin.WillHaveOneCharge(10))
+                if (!Player.HasStatus(true, StatusID.Doton) && !IsMoving && !TenChiJin.WillHaveOneCharge(10))
                 {
                     SetNinjutsu(Doton);
                 }
@@ -180,21 +187,23 @@ public sealed class NinDefault : NIN_Base
                 return false;
             }
 
-            if (IsBurst
-                && TrickAttack.WillHaveOneCharge(18)
-                && Suiton.CanUse(out _))
+            //Vulnerable
+            if (TrickAttack.WillHaveOneCharge(19) && Suiton.CanUse(out _))
             {
                 SetNinjutsu(Suiton);
                 return false;
             }
 
+            //Single
             if (Ten.CanUse(out _, InTrickAttack
-                 && !Player.HasStatus(true, StatusID.RaijuReady)
+                                  && !Player.HasStatus(false, StatusID.RaijuReady)
                     ? CanUseOption.EmptyOrSkipCombo
                     : CanUseOption.None))
             {
+                PluginLog.Information($"Can use Ten? {Ten.CanUse(out _)}");
                 if (Raiton.CanUse(out _))
                 {
+                    PluginLog.Information($"RAITON TIME BABY? {true}");
                     SetNinjutsu(Raiton);
                     return false;
                 }
@@ -207,12 +216,9 @@ public sealed class NinDefault : NIN_Base
             }
         }
 
-        var actions = new IAction[]
-        {
-            DotonChi, SuitonJin, RabbitMedium, FumaShuriken, Katon, Raiton, Hyoton, Huton, Doton, Suiton, GokaMekkyaku, HyoshoRanryu
-        };
-
-        if (IsLastAction(false, actions))
+        if (IsLastAction(false, DotonChi, SuitonJin,
+                RabbitMedium, FumaShuriken, Katon, Raiton,
+                Hyoton, Huton, Doton, Suiton, GokaMekkyaku, HyoshoRanryu))
         {
             ClearNinjutsu();
         }
@@ -224,15 +230,18 @@ public sealed class NinDefault : NIN_Base
     {
         act = null;
 
+        //TenChiJin
         if (Player.HasStatus(true, StatusID.TenChiJin))
         {
-            var tenId = AdjustId(Ten.ID);
-            var chiId = AdjustId(Chi.ID);
-            var jinId = AdjustId(Jin.ID);
+            uint tenId = AdjustId(Ten.ID);
+            uint chiId = AdjustId(Chi.ID);
+            uint jinId = AdjustId(Jin.ID);
 
+            //First
             if (tenId == FumaShurikenTen.ID
                 && !IsLastAction(false, FumaShurikenJin, FumaShurikenTen))
             {
+                //AOE
                 if (Katon.CanUse(out _))
                 {
                     if (FumaShurikenJin.CanUse(out act))
@@ -240,37 +249,38 @@ public sealed class NinDefault : NIN_Base
                         return true;
                     }
                 }
+
+                //Single
                 if (FumaShurikenTen.CanUse(out act))
                 {
                     return true;
                 }
             }
-            else if (tenId == KatonTen.ID
-                     && !IsLastAction(false, KatonTen))
+
+            //Second
+            else if (tenId == KatonTen.ID && !IsLastAction(false, KatonTen))
             {
                 if (KatonTen.CanUse(out act, CanUseOption.MustUse))
                 {
                     return true;
                 }
             }
-            else if (chiId == RaitonChi.ID
-                     && !IsLastAction(false, RaitonChi))
+            //Others
+            else if (chiId == RaitonChi.ID && !IsLastAction(false, RaitonChi))
             {
                 if (RaitonChi.CanUse(out act, CanUseOption.MustUse))
                 {
                     return true;
                 }
             }
-            else if (chiId == DotonChi.ID
-                     && !IsLastAction(false, DotonChi))
+            else if (chiId == DotonChi.ID && !IsLastAction(false, DotonChi))
             {
                 if (DotonChi.CanUse(out act, CanUseOption.MustUse))
                 {
                     return true;
                 }
             }
-            else if (jinId == SuitonJin.ID
-                     && !IsLastAction(false, SuitonJin))
+            else if (jinId == SuitonJin.ID && !IsLastAction(false, SuitonJin))
             {
                 if (SuitonJin.CanUse(out act, CanUseOption.MustUse))
                 {
@@ -279,9 +289,9 @@ public sealed class NinDefault : NIN_Base
             }
         }
 
-        if (!Player.WillStatusEnd(12, true, StatusID.Kassatsu)
-            && Player.HasStatus(true, StatusID.Kassatsu)
-            && !IsBurst)
+        //Keep Kassatsu in Burst.
+        if (!Player.WillStatusEnd(3, false, StatusID.Kassatsu)
+            && Player.HasStatus(false, StatusID.Kassatsu) && !InTrickAttack)
         {
             return false;
         }
@@ -293,88 +303,125 @@ public sealed class NinDefault : NIN_Base
 
         var id = AdjustId(ActionID.Ninjutsu);
 
+        //Failed
         if ((uint)id == RabbitMedium.ID)
         {
             ClearNinjutsu();
             act = null;
             return false;
         }
-
-        if (id == ActionID.Ninjutsu)
+        //First
+        else if (id == ActionID.Ninjutsu)
         {
+            //Can't use.
             if (!Player.HasStatus(true, StatusID.Kassatsu, StatusID.TenChiJin)
                 && !Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
                 && !IsLastAction(false, _ninActionAim.Ninjutsu[0]))
             {
                 return false;
             }
+
             act = _ninActionAim.Ninjutsu[0];
+            PluginLog.Information($"Casting {act.Name}");
+
             return true;
         }
-
-        if ((uint)id == _ninActionAim.ID)
+        //Finished
+        else if ((uint)id == _ninActionAim.ID)
         {
             if (_ninActionAim.CanUse(out act, CanUseOption.MustUse))
             {
+                PluginLog.Information($"Casting {_ninActionAim.Name}");
+
                 return true;
             }
 
             if (_ninActionAim.ID == Doton.ID && !InCombat)
             {
                 act = _ninActionAim;
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
         }
+        //Second
         else if ((uint)id == FumaShuriken.ID)
         {
             if (_ninActionAim.Ninjutsu.Length > 1
                 && !IsLastAction(false, _ninActionAim.Ninjutsu[1]))
             {
                 act = _ninActionAim.Ninjutsu[1];
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
         }
-        else if ((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID)
+        //Third
+        else if (SecondNinjutsu)
         {
             if (_ninActionAim.Ninjutsu.Length > 2
                 && !IsLastAction(false, _ninActionAim.Ninjutsu[2]))
             {
                 act = _ninActionAim.Ninjutsu[2];
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
         }
 
         return false;
     }
+
     #endregion
 
     protected override bool GeneralGCD(out IAction act)
     {
         var hasRaijuReady = Player.HasStatus(true, StatusID.RaijuReady);
-        var hasTenChiJinReady = Player.HasStatus(true, StatusID.TenChiJin);
 
-        if ((InTrickAttack || InMug)
-            && NoNinjutsu
-            && !hasRaijuReady
-            && PhantomKamaitachi.CanUse(out act))
+        var evenTrick = !Bunshin.HasOneCharge && !InTrickAttack && InMug;
+        var generalRules = NoNinjutsu && !hasRaijuReady && !Ten.CanUse(out _);
+        var oddTrick = !Bunshin.HasOneCharge && InTrickAttack && !InMug;
+        var noDamageIncrease = TrickAttack.ElapsedAfter(2) && Mug.ElapsedAfter(2) && HutonTime <= 50;
+
+        //if (((InTrickAttack || InMug) || (!Bunshin.HasOneCharge)) && NoNinjutsu && !hasRaijuReady
+        //    && PhantomKamaitachi.CanUse(out act))
+        //{
+        //    return true;
+        //}
+
+        if ((generalRules && (evenTrick || oddTrick) || noDamageIncrease) && PhantomKamaitachi.CanUse(out act))
         {
+            PluginLog.Information($"Casting {act.Name}");
+
             return true;
         }
 
         if (ChoiceNinjutsu(out act))
         {
+            PluginLog.Information($"Casting {act.Name}");
+
             return true;
         }
 
         if ((!InCombat || !CombatElapsedLess(9)) && DoNinjutsu(out act))
         {
+            PluginLog.Information($"Casting {act.Name}");
+
             return true;
         }
 
+        //No Ninjutsu
         if (NoNinjutsu)
         {
-            if (!CombatElapsedLess(10) && FleetingRaiju.CanUse(out act) && !hasTenChiJinReady)
+            if (Player.HasStatus(true, StatusID.Ninjutsu))
             {
+                return false;
+            }
+
+            if (!CombatElapsedLess(10) && FleetingRaiju.CanUse(out act))
+            {
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
 
@@ -385,9 +432,12 @@ public sealed class NinDefault : NIN_Base
 
             if (Huraijin.CanUse(out act))
             {
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
 
+            //AOE
             if (HakkeMujinsatsu.CanUse(out act))
             {
                 return true;
@@ -398,31 +448,36 @@ public sealed class NinDefault : NIN_Base
                 return true;
             }
 
-            if (ArmorCrush.CanUse(out act) && !IsBurst)
+            //Single
+            if (ArmorCrush.CanUse(out act) && !InTrickAttack)
             {
-                return true;
-            }
+                PluginLog.Information($"Casting {act.Name}");
 
-            if (PhantomKamaitachi.CanUse(out act) && InTrickAttack && HutonTime <= 50f)
-            {
                 return true;
             }
 
             if (AeolianEdge.CanUse(out act))
             {
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
 
             if (GustSlash.CanUse(out act))
             {
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
 
             if (SpinningEdge.CanUse(out act))
             {
+                PluginLog.Information($"Casting {act.Name}");
+
                 return true;
             }
 
+            //Range
             if (IsMoveForward && MoveForwardAbility(out act))
             {
                 return true;
@@ -439,10 +494,8 @@ public sealed class NinDefault : NIN_Base
             StatusHelper.StatusOff(StatusID.Hidden);
         }
 
-        if (!InCombat && _ninActionAim == null
-                      && Configs.GetBool("UseHide")
-                      && Ten.IsCoolingDown
-                      && Hide.CanUse(out act))
+        if (!InCombat && _ninActionAim == null && Configs.GetBool("UseHide")
+            && Ten.IsCoolingDown && Hide.CanUse(out act))
         {
             return true;
         }
@@ -468,7 +521,7 @@ public sealed class NinDefault : NIN_Base
             return base.EmergencyAbility(nextGCD, out act);
         }
 
-        if (Kassatsu.CanUse(out act))
+        if (TrickAttack.WillHaveOneCharge(8) && Kassatsu.CanUse(out act))
         {
             return true;
         }
@@ -478,54 +531,51 @@ public sealed class NinDefault : NIN_Base
             return true;
         }
 
-        if (IsBurst && !CombatElapsedLess(5) && Mug.CanUse(out act))
+        if (!CombatElapsedLess(4) && Mug.CanUse(out act))
         {
+            IsBurstTime = true;
             return true;
         }
 
-        if (CombatElapsedLess(SuitonPrePullTimer))
+        //Use Suiton
+        if (!CombatElapsedLess(6))
         {
-            return base.EmergencyAbility(nextGCD, out act);
-        }
-
-        if (_firstTrickAttack)
-        {
-            if (IsBurst && TrickAttack.CanUse(out act, CanUseOption.OnLastAbility))
+            if (_firstTrickAttack)
             {
-                _firstTrickAttack = false;
+                if (Mug.ElapsedAfter(1.2f) && TrickAttack.CanUse(out act, CanUseOption.OnLastAbility))
+                {
+                    _firstTrickAttack = false;
+                    IsBurstTime = true;
+                    return true;
+                }
+            }
+            else
+            {
+                if (TrickAttack.CanUse(out act))
+                {
+                    IsBurstTime = true;
+                    return true;
+                }
+            }
+
+            if (TrickAttack.IsCoolingDown && !TrickAttack.WillHaveOneCharge(19)
+                                          && Meisui.CanUse(out act))
+            {
                 return true;
             }
-        }
-        else
-        {
-            if (IsBurst && TrickAttack.CanUse(out act))
-            {
-                return true;
-            }
-        }
-
-        if (TrickAttack.IsCoolingDown
-            && !TrickAttack.WillHaveOneCharge(18)
-            && Meisui.CanUse(out act))
-        {
-            return true;
         }
 
         return base.EmergencyAbility(nextGCD, out act);
     }
 
-
     protected override bool AttackAbility(out IAction act)
     {
+        IsBurstTime = HostileTargets.Any(x => x.HasStatus(true, StatusID.TrickAttack));
+
         act = null;
         if (!NoNinjutsu || !InCombat)
         {
             return false;
-        }
-
-        if (!IsMoving && InTrickAttack && !Ten.ElapsedAfter(30) && TenChiJin.CanUse(out act))
-        {
-            return true;
         }
 
         if (!CombatElapsedLess(5) && Bunshin.CanUse(out act))
@@ -535,6 +585,12 @@ public sealed class NinDefault : NIN_Base
 
         if (InTrickAttack)
         {
+
+            if (DreamWithinADream.CanUse(out act))
+            {
+                return true;
+            }
+
             if (!DreamWithinADream.EnoughLevel)
             {
                 if (Assassinate.CanUse(out act))
@@ -542,47 +598,32 @@ public sealed class NinDefault : NIN_Base
                     return true;
                 }
             }
-            else
+        }
+
+        if (!IsMoving && InTrickAttack && !Ten.ElapsedAfter(30) && TenChiJin.CanUse(out act))
+        {
+            return true;
+        }
+
+        if ((!InMug || InTrickAttack)
+            && (!Bunshin.WillHaveOneCharge(10) || Player.HasStatus(false, StatusID.PhantomKamaitachiReady) ||
+                Mug.WillHaveOneCharge(2)))
+        {
+            if (HellfrogMedium.CanUse(out act))
             {
-                if (_firstDawd)
-                {
-                    if (DreamWithinADream.CanUse(out act))
-                    {
-                        _firstDawd = false;
-                        return true;
-                    }
-                }
-                if (DreamWithinADream.CanUse(out act) && HyoshoRanryu.IsInCooldown && IsBurst)
-                {
-                    return true;
-                }
+                return true;
             }
-        }
 
-        if ((InMug && !InTrickAttack) ||
-            (Bunshin.WillHaveOneCharge(10)
-             && !Player.HasStatus(false, StatusID.PhantomKamaitachiReady)
-             && !Mug.WillHaveOneCharge(2)))
-        {
-            return base.AttackAbility(out act);
-        }
-
-        if (HellfrogMedium.CanUse(out act))
-        {
-            return true;
-        }
-
-        if (Bhavacakra.CanUse(out act) && !TrickAttack.WillHaveOneCharge(5))
-        {
-            return true;
+            if (Bhavacakra.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         return base.AttackAbility(out act);
     }
 
-    public override void DisplayStatus()
-    {
-        ImGui.Text(_ninActionAim?.ToString() ?? "No Aimed Ninjustus.");
-        base.DisplayStatus();
-    }
+    private static bool SecondNinjutsu => AdjustId(ActionID.Ninjutsu) is ActionID.Katon or ActionID.Raiton
+        or ActionID.Hyoton or ActionID.GokaMekkyaku or ActionID.HyoshoRanryu;
+
 }
