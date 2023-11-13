@@ -1,4 +1,6 @@
-﻿namespace GlaiveRotations.Melee.Ninja.PvE;
+﻿using System.Linq;
+
+namespace GlaiveRotations.Melee.Ninja.PvE;
 
 [RotationDesc(ActionID.Mug)]
 public sealed partial class NinjaPvE : NIN_Base
@@ -256,7 +258,7 @@ public sealed partial class NinjaPvE : NIN_Base
             }
         }
 
-        if (!IsMoving && InTrickAttack)
+        if (!IsMoving && DreamWithinADream.ElapsedAfter(3) && InTrickAttack)
         {
             if (Player.HasStatus(true, StatusID.RaijuReady)
                 && TenChiJin.CanUse(out act, CanUseOption.OnLastAbility))

@@ -1,4 +1,4 @@
-﻿using Dalamud.Logging;
+﻿using System.Linq;
 
 namespace GlaiveRotations.Melee.Ninja.PvE;
 
@@ -235,7 +235,7 @@ public sealed partial class NinjaPvE
             return false;
         }
         //First
-        else if (id == ActionID.Ninjutsu && IsLastNinjustu(_ninjustuAction.Ninjutsu[0]))
+        else if (id == ActionID.Ninjutsu && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[0])
         {
             //Can't use.
             if (!Player.HasStatus(true, StatusID.Kassatsu, StatusID.TenChiJin)
@@ -259,7 +259,7 @@ public sealed partial class NinjaPvE
             }
         }
         //Second
-        else if ((uint)id == FumaShuriken.ID && IsLastNinjustu(_ninjustuAction.Ninjutsu[1]))
+        else if ((uint)id == FumaShuriken.ID && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[1])
         {
             if (_ninjustuAction.Ninjutsu.Length > 1
                 && !IsLastAction(false, _ninjustuAction.Ninjutsu[1]))
@@ -269,7 +269,7 @@ public sealed partial class NinjaPvE
             }
         }
         //Third
-        else if (((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID) && IsLastNinjustu(_ninjustuAction.Ninjutsu[2]))
+        else if (((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID) && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[2])
         {
             if (_ninjustuAction.Ninjutsu.Length > 2
                 && !IsLastAction(false, _ninjustuAction.Ninjutsu[2]))
@@ -282,14 +282,14 @@ public sealed partial class NinjaPvE
         return false;
     }
 
-    private static bool IsLastNinjustu(IBaseAction action)
-    {
-        PluginLog.Information($"Action is: {action}");
-        if (RecordActions != null && RecordActions.Any())
-        {
-            return RecordActions.First() != action;
-        }
+    //private static bool IsLastNinjustu(IBaseAction action)
+    //{
+    //    PluginLog.Information($"Action is: {action}");
+    //    if (RecordActions != null && RecordActions.Any())
+    //    {
+    //        return RecordActions.First() != action;
+    //    }
 
-        return true;
-    }
+    //    return true;
+    //}
 }
