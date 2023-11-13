@@ -2,16 +2,16 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<Authors>ChrisMellor</Authors>
-		<Version>0.0.1.11</Version>
+		<Version>0.0.1.23</Version>
 		<PlatformTarget>x64</PlatformTarget>
 		<Platforms>AnyCPU</Platforms>
 
 		<DalamudLibPath>$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="RotationSolver.Basic" Version="3.4.15" />
-	</ItemGroup>
+	<!--<ItemGroup>
+		<PackageReference Include="RotationSolver.Basic" Version="3.5.3" />
+	</ItemGroup-->
 
 	<ItemGroup>
 		<Reference Include="Dalamud">
@@ -41,6 +41,9 @@
 		<Reference Include="Newtonsoft.Json">
 			<HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
 			<Private>False</Private>
+		</Reference>
+		<Reference Include="RotationSolver.Basic">
+			<HintPath>..\..\ArchiDog1998\RotationSolver\RotationSolver.Basic\bin\Debug\net7.0-windows\RotationSolver.Basic.dll</HintPath>
 		</Reference>
 
 		<Using Include="Dalamud.Game.ClientState.JobGauge.Enums" />

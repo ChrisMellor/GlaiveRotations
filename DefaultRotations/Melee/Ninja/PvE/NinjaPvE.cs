@@ -18,15 +18,15 @@ public sealed partial class NinjaPvE : NIN_Base
             ClearNinjutsu();
         }
 
-        var realInHuton = !HutonEndAfterGCD() || IsLastAction(false, Huton2);
-        if (realInHuton && _ninjustuAction == Huton2)
+        var realInHuton = !HutonEndAfterGCD() || IsLastAction(false, Huton);
+        if (realInHuton && _ninjustuAction == Huton)
         {
             ClearNinjutsu();
         }
 
         if (DoNinjutsu(out var act))
         {
-            if (act == Suiton2 && remainTime > CountDownAhead)
+            if (act == Suiton && remainTime >= CountDownAhead)
             {
                 return null;
             }
@@ -34,20 +34,20 @@ public sealed partial class NinjaPvE : NIN_Base
             return act;
         }
 
-        if (remainTime <= 6)
+        if (remainTime <= 6.5)
         {
-            SetNinjutsu(Suiton2);
+            SetNinjutsu(Suiton);
         }
         else if (remainTime <= 10)
         {
-            if (_ninjustuAction == null && Ten2.IsCoolingDown && Hide.CanUse(out act))
+            if (_ninjustuAction == null && Ten.IsCoolingDown && Hide.CanUse(out act))
             {
                 return act;
             }
 
             if (!realInHuton)
             {
-                SetNinjutsu(Huton2);
+                SetNinjutsu(Huton);
             }
         }
 
@@ -59,7 +59,7 @@ public sealed partial class NinjaPvE : NIN_Base
         var hasRaijuReady = Player.HasStatus(true, StatusID.RaijuReady);
 
         var evenTrick = !Bunshin.HasOneCharge && !InTrickAttack && InMug;
-        var generalRules = NoNinjutsu && !hasRaijuReady && !Ten2.CanUse(out _);
+        var generalRules = NoNinjutsu && !hasRaijuReady && !Ten.CanUse(out _);
         var oddTrick = !Bunshin.HasOneCharge && InTrickAttack && !InMug;
         var noDamageIncrease = TrickAttack.ElapsedAfter(2) && Mug.ElapsedAfter(2) && HutonTime <= 50;
 
@@ -210,10 +210,12 @@ public sealed partial class NinjaPvE : NIN_Base
                 }
             }
 
-            if (TrickAttack.IsCoolingDown && !TrickAttack.WillHaveOneCharge(19)
-                                          && Meisui.CanUse(out act))
+            if (TrickAttack.IsCoolingDown && !TrickAttack.WillHaveOneCharge(19))
             {
-                return true;
+                if (Meisui.CanUse(out act))
+                {
+                    return true;
+                }
             }
         }
 
@@ -230,9 +232,12 @@ public sealed partial class NinjaPvE : NIN_Base
             return false;
         }
 
-        if (!CombatElapsedLess(5) && Bunshin.CanUse(out act))
+        if (!CombatElapsedLess(5))
         {
-            return true;
+            if (Bunshin.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         if (InTrickAttack)
@@ -251,9 +256,13 @@ public sealed partial class NinjaPvE : NIN_Base
             }
         }
 
-        if (!IsMoving && InTrickAttack && !Ten.ElapsedAfter(30) && TenChiJin.CanUse(out act))
+        if (!IsMoving && InTrickAttack)
         {
-            return true;
+            if (Player.HasStatus(true, StatusID.RaijuReady)
+                && TenChiJin.CanUse(out act, CanUseOption.OnLastAbility))
+            {
+                return true;
+            }
         }
 
         if ((!InMug || InTrickAttack)

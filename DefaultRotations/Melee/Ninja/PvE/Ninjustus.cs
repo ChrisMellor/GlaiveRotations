@@ -1,4 +1,6 @@
-﻿namespace GlaiveRotations.Melee.Ninja.PvE;
+﻿using Dalamud.Logging;
+
+namespace GlaiveRotations.Melee.Ninja.PvE;
 
 public sealed partial class NinjaPvE
 {
@@ -9,7 +11,7 @@ public sealed partial class NinjaPvE
             return;
         }
 
-        if (_ninjustuAction != null && IsLastAction(false, Ten2, Jin2, Chi2, FumaShurikenTen, FumaShurikenJin))
+        if (_ninjustuAction != null && IsLastAction(false, Ten, Jin, Chi, FumaShurikenTen, FumaShurikenJin))
         {
             return;
         }
@@ -51,25 +53,25 @@ public sealed partial class NinjaPvE
         {
             if (GokaMekkyaku.CanUse(out _))
             {
-                SetNinjutsu(GokaMekkyaku2);
+                SetNinjutsu(GokaMekkyaku);
                 return false;
             }
 
             if (HyoshoRanryu.CanUse(out _))
             {
-                SetNinjutsu(HyoshoRanryu2);
+                SetNinjutsu(HyoshoRanryu);
                 return false;
             }
 
             if (Katon.CanUse(out _))
             {
-                SetNinjutsu(Katon2);
+                SetNinjutsu(Katon);
                 return false;
             }
 
             if (Raiton.CanUse(out _))
             {
-                SetNinjutsu(Raiton2);
+                SetNinjutsu(Raiton);
                 return false;
             }
         }
@@ -87,12 +89,12 @@ public sealed partial class NinjaPvE
                 return false;
             }
 
-            if (Ten2.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
+            if (Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
                 && (!InCombat || !Huraijin.EnoughLevel)
                 && Huton.CanUse(out _)
                 && !IsLastAction(false, Huton))
             {
-                SetNinjutsu(Huton2);
+                SetNinjutsu(Huton);
                 return false;
             }
 
@@ -101,46 +103,46 @@ public sealed partial class NinjaPvE
             {
                 if (!Player.HasStatus(true, StatusID.Doton) && !IsMoving && !TenChiJin.WillHaveOneCharge(10))
                 {
-                    SetNinjutsu(Doton2);
+                    SetNinjutsu(Doton);
                 }
                 else
                 {
-                    SetNinjutsu(Katon2);
+                    SetNinjutsu(Katon);
                 }
 
                 return false;
             }
 
             //Vulnerable
-            if (TrickAttack.WillHaveOneCharge(19) && Suiton.CanUse(out _))
+            if (TrickAttack.WillHaveOneCharge(21) && Suiton.CanUse(out _))
             {
-                SetNinjutsu(Suiton2);
+                SetNinjutsu(Suiton);
                 return false;
             }
 
             //Single
-            if (Ten2.CanUse(out _, InTrickAttack
-                                   && !Player.HasStatus(false, StatusID.RaijuReady)
+            if (Ten.CanUse(out _, InTrickAttack
+                                  && !Player.HasStatus(false, StatusID.RaijuReady)
                     ? CanUseOption.EmptyOrSkipCombo
                     : CanUseOption.None))
             {
                 if (Raiton.CanUse(out _))
                 {
-                    SetNinjutsu(Raiton2);
+                    SetNinjutsu(Raiton);
                     return false;
                 }
 
                 if (!Chi.EnoughLevel && FumaShuriken.CanUse(out _))
                 {
-                    SetNinjutsu(FumaShuriken2);
+                    SetNinjutsu(FumaShuriken);
                     return false;
                 }
             }
         }
 
         if (IsLastAction(false, DotonChi, SuitonJin,
-                RabbitMedium, FumaShuriken2, Katon2, Raiton2,
-                Hyoton, Huton2, Doton2, Suiton2, GokaMekkyaku2, HyoshoRanryu2))
+                RabbitMedium, FumaShuriken, Katon, Raiton,
+                Hyoton, Huton, Doton, Suiton, GokaMekkyaku, HyoshoRanryu))
         {
             ClearNinjutsu();
         }
@@ -212,8 +214,8 @@ public sealed partial class NinjaPvE
         }
 
         //Keep Kassatsu in Burst.
-        if (!Player.WillStatusEnd(3, false, StatusID.Kassatsu)
-            && Player.HasStatus(false, StatusID.Kassatsu) && !InTrickAttack)
+        if (!Player.WillStatusEnd(3, true, StatusID.Kassatsu)
+            && Player.HasStatus(true, StatusID.Kassatsu) && !InTrickAttack)
         {
             return false;
         }
@@ -233,28 +235,23 @@ public sealed partial class NinjaPvE
             return false;
         }
         //First
-        else if (id == ActionID.Ninjutsu)
+        else if (id == ActionID.Ninjutsu && IsLastNinjustu(_ninjustuAction.Ninjutsu[0]))
         {
             //Can't use.
             if (!Player.HasStatus(true, StatusID.Kassatsu, StatusID.TenChiJin)
-                && !Ten2.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
+                && !Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
                 && !IsLastAction(false, _ninjustuAction.Ninjutsu[0]))
             {
                 return false;
             }
 
             act = _ninjustuAction.Ninjutsu[0];
-
             return true;
         }
         //Finished
         else if ((uint)id == _ninjustuAction.ID)
         {
-            if (_ninjustuAction.CanUse(out act, CanUseOption.MustUse))
-            {
-                return true;
-            }
-
+            if (_ninjustuAction.CanUse(out act, CanUseOption.MustUse)) return true;
             if (_ninjustuAction.ID == Doton.ID && !InCombat)
             {
                 act = _ninjustuAction;
@@ -262,7 +259,7 @@ public sealed partial class NinjaPvE
             }
         }
         //Second
-        else if ((uint)id == FumaShuriken.ID)
+        else if ((uint)id == FumaShuriken.ID && IsLastNinjustu(_ninjustuAction.Ninjutsu[1]))
         {
             if (_ninjustuAction.Ninjutsu.Length > 1
                 && !IsLastAction(false, _ninjustuAction.Ninjutsu[1]))
@@ -272,7 +269,7 @@ public sealed partial class NinjaPvE
             }
         }
         //Third
-        else if ((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID)
+        else if (((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID) && IsLastNinjustu(_ninjustuAction.Ninjutsu[2]))
         {
             if (_ninjustuAction.Ninjutsu.Length > 2
                 && !IsLastAction(false, _ninjustuAction.Ninjutsu[2]))
@@ -283,5 +280,16 @@ public sealed partial class NinjaPvE
         }
 
         return false;
+    }
+
+    private static bool IsLastNinjustu(IBaseAction action)
+    {
+        PluginLog.Information($"Action is: {action}");
+        if (RecordActions != null && RecordActions.Any())
+        {
+            return RecordActions.First() != action;
+        }
+
+        return true;
     }
 }
