@@ -41,13 +41,13 @@ jobs:
                       
       - name: Build Plugin
         run: |
-          invoke-expression 'dotnet build --no-restore --configuration Release DefaultRotations'
+          invoke-expression 'dotnet build --no-restore --configuration Release GlaiveRotations'
            
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           path: |
-            .\DefaultRotations\bin\Release\net7.0-windows\
+            .\GlaiveRotations\bin\Release\net7.0-windows\
 
   release:
       name: release
@@ -63,22 +63,22 @@ jobs:
         - name: Display structure of downloaded files
           run: ls -R
 
-        - name: Upload DefaultRotations dll
+        - name: Upload GlaiveRotations dll
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ needs.release-please.outputs.upload_url }}
-            asset_path: artifact/DefaultRotations.dll
-            asset_name: DefaultRotations.dll
+            asset_path: artifact/GlaiveRotations.dll
+            asset_name: GlaiveRotations.dll
             asset_content_type: application/x-msdownload
             
-        - name: Upload DefaultRotations pdb
+        - name: Upload GlaiveRotations pdb
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ needs.release-please.outputs.upload_url }}
-            asset_path: artifact/DefaultRotations.pdb
-            asset_name: DefaultRotations.pdb
+            asset_path: artifact/GlaiveRotations.pdb
+            asset_name: GlaiveRotations.pdb
             asset_content_type: application/octet-stream
