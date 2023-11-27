@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 
 namespace GlaiveRotations.Melee.Ninja.PvE;
 
 [RotationDesc(ActionID.Mug)]
 public sealed partial class NinjaPvE : NIN_Base
 {
+    private static readonly Stopwatch StopWatch = new Stopwatch();
+
     protected override IRotationConfigSet CreateConfiguration()
     {
         return base.CreateConfiguration()
@@ -52,21 +55,37 @@ public sealed partial class NinjaPvE : NIN_Base
                 SetNinjutsu(Huton);
             }
         }
-
+        StopWatch.Reset();
         return base.CountDownAction(remainTime);
     }
 
     protected override bool GeneralGCD(out IAction act)
     {
+        StopWatch.Start();
         var hasRaijuReady = Player.HasStatus(true, StatusID.RaijuReady);
 
-        var evenTrick = !Bunshin.HasOneCharge && !InTrickAttack && InMug;
-        var generalRules = NoNinjutsu && !hasRaijuReady && !Ten.CanUse(out _);
-        var oddTrick = !Bunshin.HasOneCharge && InTrickAttack && !InMug;
-        var noDamageIncrease = TrickAttack.ElapsedAfter(2) && Mug.ElapsedAfter(2) && HutonTime <= 50;
+        var evenTrick = !Bunshin.HasOneCharge &&
+                        !InTrickAttack &&
+                        InMug;
 
-        var isNotUsingNinjustu = Player.HasStatus(true, StatusID.PhantomKamaitachiReady) && !Player.HasStatus(true, StatusID.Ninjutsu);
-        if ((generalRules && (evenTrick || oddTrick) || noDamageIncrease) && isNotUsingNinjustu && PhantomKamaitachi.CanUse(out act))
+        var generalRules = NoNinjutsu &&
+                           !hasRaijuReady &&
+                           !Ten.CanUse(out _);
+
+        var noDamageIncrease = TrickAttack.ElapsedAfter(2) &&
+                               Mug.ElapsedAfter(2) && HutonTime <= 50;
+
+        var isNotUsingNinjustu = Player.HasStatus(true, StatusID.PhantomKamaitachiReady) &&
+                                 !Player.HasStatus(true, StatusID.Ninjutsu);
+
+        var isCastingNinjustu = Player.HasStatus(true, StatusID.Ninjutsu);
+        var isInMug = Mug.ElapsedAfter(0) &&
+                      !Mug.ElapsedAfter(20);
+        var isInTrickAttack = TrickAttack.ElapsedAfter(0) &&
+                              !TrickAttack.ElapsedAfter(15);
+        var needToRefreshHuton = HutonTime <= 50;
+
+        if ((generalRules && evenTrick || noDamageIncrease) && isNotUsingNinjustu && PhantomKamaitachi.CanUse(out act))
         {
             return true;
         }
@@ -82,7 +101,7 @@ public sealed partial class NinjaPvE : NIN_Base
         }
 
         //No Ninjutsu
-        if (NoNinjutsu)
+        if (!Player.HasStatus(true, StatusID.Ninjutsu) && !Player.HasStatus(false, StatusID.Ninjutsu))
         {
             if (!CombatElapsedLess(10) && FleetingRaiju.CanUse(out act) && !TenChiJin.WillHaveOneCharge(1))
             {
@@ -258,10 +277,12 @@ public sealed partial class NinjaPvE : NIN_Base
             }
         }
 
-        if (!IsMoving && DreamWithinADream.ElapsedAfter(3) && InTrickAttack)
+        if (!IsMoving && RecordActions.FirstOrDefault()?.Action.RowId != DreamWithinADream.ID && InTrickAttack)
         {
-            if (Player.HasStatus(true, StatusID.RaijuReady)
-                && TenChiJin.CanUse(out act, CanUseOption.OnLastAbility))
+            if ((RecordActions.FirstOrDefault()?.Action.RowId == Raiton.ID ||
+                 RecordActions.FirstOrDefault()?.Action.RowId == ForkedRaiju.ID ||
+                 RecordActions.FirstOrDefault()?.Action.RowId == FleetingRaiju.ID) &&
+                TenChiJin.CanUse(out act, CanUseOption.IgnoreClippingCheck))
             {
                 return true;
             }

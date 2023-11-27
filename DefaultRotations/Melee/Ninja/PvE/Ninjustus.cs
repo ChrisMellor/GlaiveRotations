@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using Dalamud.Logging;
+using System;
+using System.Linq;
 
 namespace GlaiveRotations.Melee.Ninja.PvE;
 
@@ -11,7 +13,8 @@ public sealed partial class NinjaPvE
             return;
         }
 
-        if (_ninjustuAction != null && IsLastAction(false, Ten, Jin, Chi, FumaShurikenTen, FumaShurikenJin))
+        if (_ninjustuAction != null &&
+            IsLastAction(false, Ten, Jin, Chi, FumaShurikenTen, FumaShurikenJin))
         {
             return;
         }
@@ -89,14 +92,14 @@ public sealed partial class NinjaPvE
                 return false;
             }
 
-            if (Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
-                && (!InCombat || !Huraijin.EnoughLevel)
-                && Huton.CanUse(out _)
-                && !IsLastAction(false, Huton))
-            {
-                SetNinjutsu(Huton);
-                return false;
-            }
+            //if (Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
+            //    && (!InCombat || !Huraijin.EnoughLevel)
+            //    && Huton.CanUse(out _)
+            //    && !IsLastAction(false, Huton))
+            //{
+            //    SetNinjutsu(Huton);
+            //    return false;
+            //}
 
             //Aoe
             if (Katon.CanUse(out _))
@@ -121,8 +124,8 @@ public sealed partial class NinjaPvE
             }
 
             //Single
-            if (Ten.CanUse(out _, InTrickAttack
-                                  && !Player.HasStatus(false, StatusID.RaijuReady)
+            if (IsBurstTime && Ten.CanUse(out _, InTrickAttack
+                                             && !Player.HasStatus(false, StatusID.RaijuReady)
                     ? CanUseOption.EmptyOrSkipCombo
                     : CanUseOption.None))
             {
@@ -153,7 +156,6 @@ public sealed partial class NinjaPvE
     private static bool DoNinjutsu(out IAction act)
     {
         act = null;
-
         //TenChiJin
         if (Player.HasStatus(true, StatusID.TenChiJin))
         {
@@ -226,32 +228,38 @@ public sealed partial class NinjaPvE
         }
 
         var id = AdjustId(ActionID.Ninjutsu);
-
-        //Failed
         if ((uint)id == RabbitMedium.ID)
         {
             ClearNinjutsu();
             act = null;
             return false;
         }
+
         //First
-        else if (id == ActionID.Ninjutsu && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[0])
+        else if (id == ActionID.Ninjutsu)
         {
             //Can't use.
-            if (!Player.HasStatus(true, StatusID.Kassatsu, StatusID.TenChiJin)
-                && !Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo)
-                && !IsLastAction(false, _ninjustuAction.Ninjutsu[0]))
+            if (!Player.HasStatus(true, StatusID.Kassatsu, StatusID.TenChiJin) &&
+                !Ten.CanUse(out _, CanUseOption.EmptyOrSkipCombo))
             {
                 return false;
             }
+            LogMudraStep(_ninjustuAction.Ninjutsu[0], 0);
 
-            act = _ninjustuAction.Ninjutsu[0];
-            return true;
+            if (IsPreviousActionNotRepeated(_ninjustuAction.Ninjutsu[0]))
+            {
+                act = new BaseAction((ActionID)_ninjustuAction.Ninjutsu[0].ID, ActionOption.Friendly);
+                return true;
+            }
         }
         //Finished
-        else if ((uint)id == _ninjustuAction.ID)
+        if ((uint)id == _ninjustuAction.ID)
         {
-            if (_ninjustuAction.CanUse(out act, CanUseOption.MustUse)) return true;
+            if (_ninjustuAction.CanUse(out act, CanUseOption.MustUse))
+            {
+                return true;
+            }
+
             if (_ninjustuAction.ID == Doton.ID && !InCombat)
             {
                 act = _ninjustuAction;
@@ -259,22 +267,25 @@ public sealed partial class NinjaPvE
             }
         }
         //Second
-        else if ((uint)id == FumaShuriken.ID && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[1])
+        if ((uint)id == FumaShuriken.ID)
         {
-            if (_ninjustuAction.Ninjutsu.Length > 1
-                && !IsLastAction(false, _ninjustuAction.Ninjutsu[1]))
+            if (_ninjustuAction.Ninjutsu.Length > 1 &&
+                IsPreviousActionNotRepeated(_ninjustuAction.Ninjutsu[1]))
             {
-                act = _ninjustuAction.Ninjutsu[1];
+                act = new BaseAction((ActionID)_ninjustuAction.Ninjutsu[1].ID, ActionOption.Friendly);
+                LogMudraStep(_ninjustuAction.Ninjutsu[1], 1);
+
                 return true;
             }
         }
         //Third
-        else if (((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID) && RecordActions.FirstOrDefault() != _ninjustuAction.Ninjutsu[2])
+        if ((uint)id == Katon.ID || (uint)id == Raiton.ID || (uint)id == Hyoton.ID)
         {
-            if (_ninjustuAction.Ninjutsu.Length > 2
-                && !IsLastAction(false, _ninjustuAction.Ninjutsu[2]))
+            if (_ninjustuAction.Ninjutsu.Length > 2 &&
+                IsPreviousActionNotRepeated(_ninjustuAction.Ninjutsu[2]))
             {
-                act = _ninjustuAction.Ninjutsu[2];
+                act = new BaseAction((ActionID)_ninjustuAction.Ninjutsu[2].ID, ActionOption.Friendly);
+                LogMudraStep(_ninjustuAction.Ninjutsu[2], 2);
                 return true;
             }
         }
@@ -282,14 +293,46 @@ public sealed partial class NinjaPvE
         return false;
     }
 
-    //private static bool IsLastNinjustu(IBaseAction action)
-    //{
-    //    PluginLog.Information($"Action is: {action}");
-    //    if (RecordActions != null && RecordActions.Any())
-    //    {
-    //        return RecordActions.First() != action;
-    //    }
+    private static bool IsPreviousActionNotRepeated(IAction skill)
+    {
+        var lastAction = RecordActions.FirstOrDefault()?.Action.RowId;
 
-    //    return true;
-    //}
+        LogLastUseCheck(skill, lastAction);
+
+        return lastAction != skill.ID &&
+               lastAction != skill.AdjustedID &&
+               Math.Abs(WeaponElapsed - WeaponRemain) < 0.49f;
+    }
+
+    private static void LogLastUseCheck(IAction skill, uint? lastAction)
+    {
+        var answer = GetTimeStamp();
+        PluginLog.Information($"************ Last Action Check *************");
+        PluginLog.Information($"Action is {skill.Name}");
+        PluginLog.Information($"Skill Id is {skill.ID}");
+        PluginLog.Information($"Skill Adjusted Id is {skill.AdjustedID}");
+        PluginLog.Information($"Last used Skill was: {RecordActions.FirstOrDefault()?.Action.Name}");
+        PluginLog.Information($"Last used Skill Id was: {lastAction}");
+        PluginLog.Information($"Timing - {answer}");
+        PluginLog.Information($"----------- Last Action Check -------------");
+    }
+
+    private static void LogMudraStep(IAction step, int index)
+    {
+        var answer = GetTimeStamp();
+        PluginLog.Information($"************ Setting up for {_ninjustuAction.Name} *************");
+        PluginLog.Information($"Mudra #{index + 1} is {step.Name}");
+        PluginLog.Information($"Mudra Id is {step.ID}");
+        PluginLog.Information($"Mudra Adjusted Id is {step.AdjustedID}");
+        PluginLog.Information($"Timing - {answer}");
+        PluginLog.Information($"************ Leaving Set up for {_ninjustuAction.Name} *************");
+    }
+
+    private static string GetTimeStamp()
+    {
+        var timeSpan = TimeSpan.FromMilliseconds(StopWatch.ElapsedMilliseconds);
+        var timeStamp = $"{timeSpan.Minutes:D2}m:{timeSpan.Seconds:D2}s:{timeSpan.Milliseconds:D3}ms";
+
+        return timeStamp;
+    }
 }

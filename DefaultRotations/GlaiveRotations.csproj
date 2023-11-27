@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<Authors>ChrisMellor</Authors>
-		<Version>0.0.1.23</Version>
+		<Version>0.0.2.1</Version>
 		<PlatformTarget>x64</PlatformTarget>
 		<Platforms>AnyCPU</Platforms>
 
@@ -43,7 +43,7 @@
 			<Private>False</Private>
 		</Reference>
 		<Reference Include="RotationSolver.Basic">
-			<HintPath>..\..\ArchiDog1998\RotationSolver\RotationSolver.Basic\bin\Debug\net7.0-windows\RotationSolver.Basic.dll</HintPath>
+			<HintPath>..\..\ArchiDog1998\RotationSolver\RotationSolver.Basic\bin\Release\net7.0-windows\RotationSolver.Basic.dll</HintPath>
 		</Reference>
 
 		<Using Include="Dalamud.Game.ClientState.JobGauge.Enums" />
